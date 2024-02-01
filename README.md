@@ -7,7 +7,7 @@ Controls for the game:
 
 W/A/S/D - select cells, the selected one is highlighted in yellow
 
-V - Exevate a cell
+V - Exevate a cell
 
 B - Flag a cell, highlighting it green
 
