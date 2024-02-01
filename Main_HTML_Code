@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minesweeper</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #333;
+    }
+
+    #board {
+      display: grid;
+      gap: 2px;
+      grid-template-columns: repeat(8, 40px);
+      grid-template-rows: repeat(8, 40px);
+    }
+
+    .cell {
+      width: 40px;
+      height: 40px;
+      text-align: center;
+      line-height: 40px;
+      font-size: 16px;
+      background-color: #ddd;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+
+    .hidden {
+      background-color: #aaa;
+      color: #aaa;
+    }
+
+    .mine {
+      background-color: #f00;
+      color: #fff;
+    }
+
+    .flagged {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+
+    .selected {
+      background-color: yellow;
+    }
+
+    #gameOverScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      font-size: 24px;
+      z-index: 999;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="board"></div>
+  <div id="gameOverScreen"></div>
+
+  <script>
+    const boardSize = 8;
+    const mineCount = 10;
+    let board = [];
+    let selectedCell = { x: 0, y: 0 };
+
+    function initializeBoard() {
+      board = Array.from({ length: boardSize }, () => Array(boardSize).fill(0));
+
+      // Place mines randomly
+      for (let i = 0; i < mineCount; i++) {
+        let x, y;
+        do {
+          x = Math.floor(Math.random() * boardSize);
+          y = Math.floor(Math.random() * boardSize);
+        } while (board[x][y] === 'mine');
+        board[x][y] = 'mine';
+      }
+
+      // Calculate adjacent mine counts
+      for (let x = 0; x < boardSize; x++) {
+        for (let y = 0; y < boardSize; y++) {
+          if (board[x][y] !== 'mine') {
+            let count = 0;
+            for (let i = -1; i <= 1; i++) {
+              for (let j = -1; j <= 1; j++) {
+                const newX = x + i;
+                const newY = y + j;
+                if (newX >= 0 && newX < boardSize && newY >= 0 && newY < boardSize && board[newX][newY] === 'mine') {
+                  count++;
+                }
+              }
+            }
+            board[x][y] = count;
+          }
+        }
+      }
+    }
+
+    function revealCell(x, y) {
+      const cell = document.getElementById(`cell-${x}-${y}`);
+      if (!cell.classList.contains('hidden')) {
+        return;
+      }
+
+      cell.classList.remove('hidden');
+      cell.textContent = board[x][y];
+
+      if (board[x][y] === 'mine') {
+        gameOver();
+      } else if (board[x][y] === 0) {
+        // If the cell has no adjacent mines, reveal neighboring cells
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            const newX = x + i;
+            const newY = y + j;
+            if (newX >= 0 && newX < boardSize && newY >= 0 && newY < boardSize) {
+              revealCell(newX, newY);
+            }
+          }
+        }
+      }
+    }
+
+    function toggleFlag(x, y) {
+      const cell = document.getElementById(`cell-${x}-${y}`);
+      if (!cell.classList.contains('hidden')) {
+        return;
+      }
+
+      cell.classList.toggle('flagged');
+    }
+
+    function gameOver() {
+      document.getElementById('gameOverScreen').innerText = 'Game Over! Click to restart.';
+      document.getElementById('gameOverScreen').style.display = 'flex';
+      document.getElementById('gameOverScreen').addEventListener('click', () => {
+        document.getElementById('gameOverScreen').style.display = 'none';
+        initializeBoard();
+        renderBoard();
+      });
+    }
+
+    function renderBoard() {
+      const boardContainer = document.getElementById('board');
+      boardContainer.innerHTML = '';
+
+      for (let x = 0; x < boardSize; x++) {
+        for (let y = 0; y < boardSize; y++) {
+          const cell = document.createElement('div');
+          cell.id = `cell-${x}-${y}`;
+          cell.classList.add('cell', 'hidden');
+          cell.addEventListener('click', () => revealCell(x, y));
+          cell.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            toggleFlag(x, y);
+          });
+          boardContainer.appendChild(cell);
+        }
+      }
+
+      updateSelectedCell();
+    }
+
+    function updateSelectedCell() {
+      const selected = document.getElementById(`cell-${selectedCell.x}-${selectedCell.y}`);
+      if (selected) {
+        selected.classList.add('selected');
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const oldSelected = document.getElementById(`cell-${selectedCell.x}-${selectedCell.y}`);
+      if (oldSelected) {
+        oldSelected.classList.remove('selected');
+      }
+
+      switch (e.key) {
+        case 'w':
+          selectedCell.x = (selectedCell.x - 1 + boardSize) % boardSize;
+          break;
+        case 's':
+          selectedCell.x = (selectedCell.x + 1) % boardSize;
+          break;
+        case 'a':
+          selectedCell.y = (selectedCell.y - 1 + boardSize) % boardSize;
+          break;
+        case 'd':
+          selectedCell.y = (selectedCell.y + 1) % boardSize;
+          break;
+        case 'v':
+          revealCell(selectedCell.x, selectedCell.y);
+          break;
+        case 'b':
+          toggleFlag(selectedCell.x, selectedCell.y);
+          break;
+      }
+
+      updateSelectedCell();
+    });
+
+    initializeBoard();
+    renderBoard();
+  </script>
+</body>
+</html>
