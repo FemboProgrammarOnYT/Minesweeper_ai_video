@@ -75,8 +75,10 @@
   <script>
     const boardSize = 8;
     const mineCount = 10;
+    const maxFlags = 10;
     let board = [];
     let selectedCell = { x: 0, y: 0 };
+    let flaggedCount = 0;
 
     function initializeBoard() {
       board = Array.from({ length: boardSize }, () => Array(boardSize).fill(0));
@@ -142,7 +144,15 @@
         return;
       }
 
-      cell.classList.toggle('flagged');
+      const isFlagged = cell.classList.contains('flagged');
+      
+      if (isFlagged && flaggedCount > 0) {
+        cell.classList.remove('flagged');
+        flaggedCount--;
+      } else if (!isFlagged && flaggedCount < maxFlags) {
+        cell.classList.add('flagged');
+        flaggedCount++;
+      }
     }
 
     function gameOver() {
