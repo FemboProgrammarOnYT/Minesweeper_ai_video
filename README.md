@@ -11,6 +11,9 @@ V - Exevate a cell
 
 B - Flag a cell, highlighting it green
 
-FOR THE RECORD!!
-yes, this script, is, indeed, 100% scripted by ChatGPT (GPT3.5)
 
+The script still gets occasionally get more feature added and will still get patched occasionally. 
+
+FOR THE RECORD!!
+
+yes, this script, is, indeed, 100% scripted by ChatGPT (GPT3.5)
